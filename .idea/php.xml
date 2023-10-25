@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="LaravelPintOptionsConfiguration">
+    <option name="ruleset" value="laravel" />
+  </component>
+  <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />
+</project>
