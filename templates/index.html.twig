@@ -1,0 +1,286 @@
+{% extends 'base.html.twig' %}
+
+{% block script %}
+
+{#    google charts#}
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+        google.charts.load('current', {packages: ['corechart']});
+        let barGraphData = [['Fees Collected', 'Collected', 'Outstanding', 'Overdue',]];
+        let chart = null;
+
+        function drawChart(inputData) {
+            var data = google.visualization.arrayToDataTable(
+                inputData
+            );
+
+            let options = {
+                animation: {"startup": true,
+                    duration: 500,
+                    easing: 'inAndOut'},
+                tooltip: {isHtml: true},
+                width: 300,
+                height: 200,
+                legend: {position: 'none'},
+                bar: {groupWidth: '75%'},
+                isStacked: true,
+                vAxis: {gridlines: {count: 4}, format: 'currency' },
+                series: {
+                    0: {color: '#37a2eb'},
+                    1: {color: '#ff9f40'},
+                    2: {color: '#ff6384'},
+                },
+                orientation: 'horizontal',
+                backgroundColor: '#f9f6fa',
+            }
+            chart.draw(data, options);
+        }
+
+        function updateChart() {
+            var updatedData = new google.visualization.DataTable();
+            updatedData.addColumn('string', 'Category');
+            updatedData.addColumn('number', 'Value');
+
+            updatedData.addRow(['Category 1', 50]);
+            updatedData.addRow(['Category 2', 30]);
+            updatedData.addRow(['Category 3', 20]);
+
+            chart.draw(updatedData, options);
+        }
+
+        function getData() {
+
+            const filterOptionsJSON = JSON.stringify(filterOptions);
+
+            fetch('http://localhost:8001/request', {
+                method: 'POST',
+                body: filterOptionsJSON,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    barGraphData = [['Fees Collected', 'Collected', 'Outstanding', 'Overdue',]]
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data)
+                    for (year in data) {
+                        barGraphData.push(
+                            [
+                                year,
+                                data[year]['Collected'],
+                                data[year]['Uncollected'],
+                                data[year]['Overdue']
+                            ]
+                        );
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('responseContainer').textContent = 'Error: ' + error.message;
+                })
+                .then(() => {
+                    drawChart(barGraphData);
+                });
+        }
+
+        function areOptionsValid() {
+            if (!filterOptions['Collected'] && !filterOptions['Uncollected'] && !filterOptions['Overdue']) {
+                console.log('invalid type options')
+                return;
+            } else {
+
+                getData()
+            }
+        }
+
+        // Initial request to get the graph data
+        document.addEventListener('DOMContentLoaded', () => {
+            google.charts.setOnLoadCallback(function () {
+                    chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+                areOptionsValid()
+            });
+        });
+
+    </script>
+    <script>
+{#        initializing the dates#}
+        var currentDate = new Date();
+        var oneYearLater = new Date();
+        var oneYearAgo = new Date();
+        oneYearAgo.setFullYear(currentDate.getFullYear() - 1);
+        oneYearLater.setFullYear(currentDate.getFullYear() + 1)
+        var oneYearLaterFormatted = oneYearLater.toISOString().slice(0, 10);
+        var oneYearAgoFormatted = oneYearAgo.toISOString().slice(0, 10);
+
+        let filterOptions = {
+            groupBy: 'Yearly',
+            Collected: true,
+            Uncollected: true,
+            Overdue: true,
+            startDate: oneYearAgoFormatted,
+            endDate: oneYearLaterFormatted,
+        };
+
+        {#    datepicker filter#}
+        $(function() {
+            $('#startDate').val(oneYearAgoFormatted);
+            $('#endDate').val(oneYearLaterFormatted);
+
+            $('.input-daterange').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true
+            });
+
+            $('#datepicker input').on('change', function() {
+                var startDate = $('input[name="start"]').val();
+                var endDate = $('input[name="end"]').val();
+
+                filterOptions['startDate'] = startDate;
+                filterOptions['endDate'] = endDate;
+            });
+        });
+
+        // Type handler
+        $(function () {
+            $('.form-check-input').on('change', function () {
+                filterOptions[this.value] = this.checked
+            })
+        })
+
+        // Groupby Handler
+
+        $(function () {
+            $('.group-by-button').on('click', function () {
+                $('.group-by-button').removeClass('selected-group');
+                $(this).addClass('selected-group');
+                filterOptions['groupBy'] = this.value;
+            })
+        })
+
+        // Submit handler
+        $(function() {
+            $('#submit-button').on('click', function () {
+                console.log(filterOptions)
+                areOptionsValid()
+            })
+        })
+
+        // Filter hide/show handler
+        $(function () {
+            $(function () {
+                $('.filter-expand-button').on('click', function () {
+                    $('#filter-options-container').toggleClass('hidden-filter');
+                });
+            });
+        })
+    </script>
+
+
+{% endblock %}
+
+
+{% block body %}
+
+{#    widget card#}
+    <div class="col-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6 p-0 m-5 widget-main-container">
+{#        card title#}
+        <div class="w-100 widget-card-title">
+            <h4 class="pt-2 mt-0 mb-2 ml-3 ">Revenue by Year</h4>
+        </div>
+{#        card items#}
+        <div class="w-100 d-flex flex-row container align-content-center p-0">
+{#            google chart drawn#}
+            <div id="chart_div" class=" align-self-center chart-container-default">
+            </div>
+{#            filter options container#}
+            <div class=" w-100 d-flex flex-column p-0">
+{#                filter button/header#}
+                <a class="filter-expand-button p-0" data-toggle="collapse" href="#testing">
+                    <div class="w-100 d-flex flex-row justify-content-end border-bottom-separator
+                    filter-expand-container my-auto">
+                        <span class="align-self-center px-2">Filter
+                            <i class="fa-solid fa-arrow-down-short-wide align-self-center"></i>
+                        </span>
+                    </div>
+                </a>
+
+{#                filter options section#}
+                <div id="testing" class="soft-h-100 overflow-hidden position-relative">
+                    <div id="filter-options-container" class="p-3 d-flex flex-column h-100 ">
+    {#                    date range container#}
+                        <div class="h-33 position-relative">
+                            <div>
+                                Select Date Range:
+                            </div>
+                            <div class="input-daterange input-group" id="datepicker">
+                                <input type="text" class="input-sm form-control" name="start" id="startDate" placeholder="Start Date">
+                                <input type="text" class="input-sm form-control" name="end" id="endDate" placeholder="End Date">
+                            </div>
+                        </div>
+    {#                    type switches container#}
+                        <div class="h-33 w-100 position-relative">
+                            <span class="h-25">
+                                Type:
+                            </span>
+                            <div class="form-check form-switch d-flex flex-row h-75 w-100">
+                                <div class="d-flex flex-column h-100 w-33">
+                                    <label for="includeCollectedRevenue" class="my-1">Collected</label>
+                                    <div>
+                                        <input value="Collected" class="form-check-input toggle-switch-base m-0"
+                                               type="checkbox"
+                                               role="switch"
+                                               checked>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column h-100 w-33">
+                                    <label for="" class="my-1">Uncollected</label>
+                                    <div>
+                                        <input value="Uncollected" class="form-check-input toggle-switch-base m-0 "
+                                               type="checkbox"
+                                               role="switch"
+                                               checked>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column h-100 w-33">
+                                    <label for="" class="my-1">Overdue</label>
+                                    <div>
+                                        <input value="Overdue" class="form-check-input toggle-switch-base m-0"
+                                               type="checkbox"
+                                               role="switch"
+                                               checked>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+    {#                    groupby and submit button#}
+                        <div class="d-flex flex-row mh-100 h-33 position-relative">
+                            <div class="d-flex flex-column">
+                                <span>
+                                    Group By:
+                                </span>
+                                <div class="my-auto">
+                                    <button class="toggle-button-base group-by-button " value="Monthly">Monthly</button>
+                                    <button class="toggle-button-base group-by-button" value="Quarterly">Quarterly</button>
+                                    <button class="toggle-button-base group-by-button selected-group" value="Yearly">Yearly</button>
+                                </div>
+                            </div>
+                            <button class="submit-button-base ml-auto" id="submit-button">
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+{#            information container#}
+            <div class="position-relative">
+                Testeste
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

@@ -2,16 +2,17 @@
 
 namespace App\Controller;
 
-
-
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class RevenueWidgetController
+class RevenueWidgetController extends AbstractController
 {
-    #[Route('/')]
-    public function widgetMain () {
-        return new Response('test');
+    #[Route('/', name: 'revenue')]
+    public function widgetMain(): Response
+    {
+
+        return $this->render('index.html.twig');
     }
 
 }
