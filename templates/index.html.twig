@@ -8,7 +8,10 @@
         google.charts.load('current', {packages: ['corechart']});
         let barGraphData = [['Fees Collected', 'Collected', 'Outstanding', 'Overdue',]];
         let chart = null;
+        let pieChart = null;
+        let barWidth = 300;
 
+        // Bar chart functions
         function drawChart(inputData) {
             var data = google.visualization.arrayToDataTable(
                 inputData
@@ -19,7 +22,7 @@
                     duration: 500,
                     easing: 'inAndOut'},
                 tooltip: {isHtml: true},
-                width: 300,
+                width: barWidth,
                 height: 200,
                 legend: {position: 'none'},
                 bar: {groupWidth: '75%'},
@@ -32,23 +35,12 @@
                 },
                 orientation: 'horizontal',
                 backgroundColor: '#f9f6fa',
+                chartArea: {top: '1px', left: '10px', height:'60%', width:'70%'}
             }
             chart.draw(data, options);
         }
 
-        function updateChart() {
-            var updatedData = new google.visualization.DataTable();
-            updatedData.addColumn('string', 'Category');
-            updatedData.addColumn('number', 'Value');
-
-            updatedData.addRow(['Category 1', 50]);
-            updatedData.addRow(['Category 2', 30]);
-            updatedData.addRow(['Category 3', 20]);
-
-            chart.draw(updatedData, options);
-        }
-
-        function getData() {
+        function getData(initial = false) {
 
             const filterOptionsJSON = JSON.stringify(filterOptions);
 
@@ -67,7 +59,6 @@
                     return response.json();
                 })
                 .then(data => {
-                    console.log(data)
                     for (year in data) {
                         barGraphData.push(
                             [
@@ -85,24 +76,72 @@
                 })
                 .then(() => {
                     drawChart(barGraphData);
+                    if (initial == true) {
+                        updatePieChart(barGraphData.length - 1)
+                    }
                 });
         }
 
-        function areOptionsValid() {
+        function areOptionsValid(initial = false) {
             if (!filterOptions['Collected'] && !filterOptions['Uncollected'] && !filterOptions['Overdue']) {
                 console.log('invalid type options')
                 return;
             } else {
-
-                getData()
+                getData(true)
             }
         }
 
+        // Pie Chart Functions
+        function drawPieChart(inputData){
+            var data = google.visualization.arrayToDataTable(
+                inputData
+            );
+
+            let options = {
+                pieHole: 0.47,
+                pieSliceText: 'none',
+                title: inputData[0][0],
+                tooltip: {isHtml: true},
+                width: 120,
+                height: 160,
+                legend: {position: 'bottom', alignment: 'center'},
+                backgroundColor: '#f9f6fa',
+                slices: {
+                    0: {color: '#37a2eb'},
+                    1: {color: '#ff9f40'},
+                    2: {color: '#ff6384'},
+                },
+                chartArea: {top: '10px', height:'60%', width:'100%'}
+            }
+
+            pieChart.draw(data,options)
+
+        }
+
+        function updatePieChart(index) {
+            let pieData = [[barGraphData[index][0], 'Collection Status']]
+            for (i = 1; i < 4; i++) {
+                pieData.push([barGraphData[0][i], barGraphData[index][i]])
+            }
+            drawPieChart(pieData)
+
+        }
+
+        // Universal chart functions
+
+
+
         // Initial request to get the graph data
         document.addEventListener('DOMContentLoaded', () => {
-            google.charts.setOnLoadCallback(function () {
-                    chart = new google.visualization.BarChart(document.getElementById('chart_div'));
-                areOptionsValid()
+            google.charts.setOnLoadCallback(async function () {
+                pieChart = new google.visualization.PieChart(document.getElementById('pie_chart'));
+                chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+                google.visualization.events.addListener(chart, 'onmouseover', function(e) {
+                    updatePieChart(e.row + 1)
+                });
+
+                areOptionsValid(true)
+
             });
         });
 
@@ -153,7 +192,6 @@
         })
 
         // Groupby Handler
-
         $(function () {
             $('.group-by-button').on('click', function () {
                 $('.group-by-button').removeClass('selected-group');
@@ -165,19 +203,39 @@
         // Submit handler
         $(function() {
             $('#submit-button').on('click', function () {
-                console.log(filterOptions)
                 areOptionsValid()
             })
         })
 
         // Filter hide/show handler
         $(function () {
-            $(function () {
-                $('.filter-expand-button').on('click', function () {
+            $('.filter-expand-button, #submit-button').on('click', function () {
+
+                // $('#chart_div').toggleClass('mini-chart');
+                // $('#revenue-right').toggleClass('mega-chart');
+
+                if (barWidth == 300) {
+                    barWidth = 169
+                    $('#chart_div').toggleClass('mini-chart');
+                    $('#revenue-right').toggleClass('mega-chart')
+                    drawChart(barGraphData)
+                    setTimeout(function() {
+                        $('#filter-options-container').toggleClass('hidden-filter');
+                    }, 500)
+                } else  {
                     $('#filter-options-container').toggleClass('hidden-filter');
-                });
+                    setTimeout(function() {
+                        barWidth = 300
+                        $('#revenue-right').toggleClass('mega-chart')
+                        $('#chart_div').toggleClass('mini-chart');
+                        drawChart(barGraphData)
+                    }, 500)
+                }
+
+
             });
-        })
+        });
+
     </script>
 
 
@@ -187,100 +245,101 @@
 {% block body %}
 
 {#    widget card#}
-    <div class="col-12 col-md-12 col-lg-6 col-xl-6 col-xxl-6 p-0 m-5 widget-main-container">
-{#        card title#}
+    <div class="p-0 m-5 widget-main-container">
+{#        card title (Revenue by Year) #}
         <div class="w-100 widget-card-title">
-            <h4 class="pt-2 mt-0 mb-2 ml-3 ">Revenue by Year</h4>
+            <h4 class="pt-2 mt-0 mb-2 ml-3 ">Revenue Breakdown</h4>
         </div>
-{#        card items#}
+    {#        card items#}
         <div class="w-100 d-flex flex-row container align-content-center p-0">
-{#            google chart drawn#}
-            <div id="chart_div" class=" align-self-center chart-container-default">
+        {#            google chart drawn (left side of the card) #}
+            <div id="chart_div" class="chart-container-default transition-5 z-2">
             </div>
-{#            filter options container#}
-            <div class=" w-100 d-flex flex-column p-0">
-{#                filter button/header#}
-                <a class="filter-expand-button p-0" data-toggle="collapse" href="#testing">
-                    <div class="w-100 d-flex flex-row justify-content-end border-bottom-separator
+        {#            Filter & data container (right side of the card) #}
+            <div id="revenue-right" class="d-flex flex-column p-0 transition-5">
+            {#                filter button/header#}
+                <a class="filter-expand-button p-0 w-100 border-bottom-separator">
+                    <div class=" d-flex flex-row justify-content-end
                     filter-expand-container my-auto">
                         <span class="align-self-center px-2">Filter
                             <i class="fa-solid fa-arrow-down-short-wide align-self-center"></i>
                         </span>
                     </div>
                 </a>
-
-{#                filter options section#}
-                <div id="testing" class="soft-h-100 overflow-hidden position-relative">
-                    <div id="filter-options-container" class="p-3 d-flex flex-column h-100 ">
-    {#                    date range container#}
-                        <div class="h-33 position-relative">
-                            <div>
-                                Select Date Range:
-                            </div>
-                            <div class="input-daterange input-group" id="datepicker">
-                                <input type="text" class="input-sm form-control" name="start" id="startDate" placeholder="Start Date">
-                                <input type="text" class="input-sm form-control" name="end" id="endDate" placeholder="End Date">
-                            </div>
-                        </div>
-    {#                    type switches container#}
-                        <div class="h-33 w-100 position-relative">
-                            <span class="h-25">
-                                Type:
-                            </span>
-                            <div class="form-check form-switch d-flex flex-row h-75 w-100">
-                                <div class="d-flex flex-column h-100 w-33">
-                                    <label for="includeCollectedRevenue" class="my-1">Collected</label>
-                                    <div>
-                                        <input value="Collected" class="form-check-input toggle-switch-base m-0"
-                                               type="checkbox"
-                                               role="switch"
-                                               checked>
-                                    </div>
+            {#               Pie chart & filter options & data section#}
+                <div class="h-100 ml-auto">
+                {# Pie chart section                    #}
+                    <div class="position-absolute center-x">
+                        <div id="pie_chart"></div>
+                    </div>
+                {# filter options                #}
+                    <div id="filter-options-container" class="position-relative ml-auto">
+                        <div id="" class="bg-selma d-flex flex-column h-100 p-3">
+                    {#                    date range container#}
+                            <div class="h-33">
+                                <div>
+                                    Select Date Range:
                                 </div>
-                                <div class="d-flex flex-column h-100 w-33">
-                                    <label for="" class="my-1">Uncollected</label>
-                                    <div>
-                                        <input value="Uncollected" class="form-check-input toggle-switch-base m-0 "
-                                               type="checkbox"
-                                               role="switch"
-                                               checked>
-                                    </div>
-                                </div>
-                                <div class="d-flex flex-column h-100 w-33">
-                                    <label for="" class="my-1">Overdue</label>
-                                    <div>
-                                        <input value="Overdue" class="form-check-input toggle-switch-base m-0"
-                                               type="checkbox"
-                                               role="switch"
-                                               checked>
-                                    </div>
+                                <div class="input-daterange input-group" id="datepicker">
+                                    <input type="text" class="input-sm form-control" name="start" id="startDate" placeholder="Start Date">
+                                    <input type="text" class="input-sm form-control" name="end" id="endDate" placeholder="End Date">
                                 </div>
                             </div>
-                        </div>
-    {#                    groupby and submit button#}
-                        <div class="d-flex flex-row mh-100 h-33 position-relative">
-                            <div class="d-flex flex-column">
-                                <span>
-                                    Group By:
+                    {#                    type switches container#}
+                            <div class="h-33 w-100 ">
+                                <span class="h-25">
+                                    Type:
                                 </span>
-                                <div class="my-auto">
-                                    <button class="toggle-button-base group-by-button " value="Monthly">Monthly</button>
-                                    <button class="toggle-button-base group-by-button" value="Quarterly">Quarterly</button>
-                                    <button class="toggle-button-base group-by-button selected-group" value="Yearly">Yearly</button>
+                                <div class="form-check form-switch d-flex flex-row h-75 w-100">
+                                    <div class="d-flex flex-column h-100 w-33">
+                                        <label for="includeCollectedRevenue" class="my-1">Collected</label>
+                                        <div>
+                                            <input value="Collected" class="form-check-input toggle-switch-base m-0"
+                                                   type="checkbox"
+                                                   role="switch"
+                                                   checked>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column h-100 w-33">
+                                        <label for="" class="my-1">Uncollected</label>
+                                        <div>
+                                            <input value="Uncollected" class="form-check-input toggle-switch-base m-0 "
+                                                   type="checkbox"
+                                                   role="switch"
+                                                   checked>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column h-100 w-33">
+                                        <label for="" class="my-1">Overdue</label>
+                                        <div>
+                                            <input value="Overdue" class="form-check-input toggle-switch-base m-0"
+                                                   type="checkbox"
+                                                   role="switch"
+                                                   checked>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <button class="submit-button-base ml-auto" id="submit-button">
-                                Submit
-                            </button>
+                    {#                    groupby and submit button#}
+                            <div class="d-flex flex-row h-33">
+                                <div class="d-flex flex-column">
+                                    <span>
+                                        Group By:
+                                    </span>
+                                    <div class="my-auto">
+                                        <button class="toggle-button-base group-by-button " value="Monthly">Monthly</button>
+                                        <button class="toggle-button-base group-by-button" value="Quarterly">Quarterly</button>
+                                        <button class="toggle-button-base group-by-button selected-group" value="Yearly">Yearly</button>
+                                    </div>
+                                </div>
+                                <button class="submit-button-base ml-auto" id="submit-button">
+                                    Submit
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-{#            information container#}
-            <div class="position-relative">
-                Testeste
-            </div>
-
         </div>
     </div>
 {% endblock %}

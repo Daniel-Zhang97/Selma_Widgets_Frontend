@@ -4,6 +4,7 @@ body {
 }
 
 .widget-main-container {
+    max-width: 450px;
     border-radius: 0.375rem;
     border: 1px solid rgba(0, 0, 0, 0.175);
     background-color: #f9f6fa !important;
@@ -39,8 +40,7 @@ div.google-visualization-tooltip span {
 
 .filter-expand-button {
     color: #39bff5;
-    padding-left: 1%;
-    transition: all 0.3s ease-in-out !important;
+    transition: all 0.5s ease-in-out !important;
 }
 
 
@@ -69,7 +69,8 @@ div.google-visualization-tooltip span {
 }
 
 .h-33 {
-    height: 33%;
+    min-height: 50px;
+    max-height: 33%;
 }
 
 .w-33 {
@@ -113,12 +114,58 @@ div.google-visualization-tooltip span {
     height: 100%;
 }
 
+#filter-options-container {
+    height: 100%;
+    max-height: 0;
+    overflow: hidden;
+    z-index: 10;
+    transition: max-height 0.5s ease-in-out, height 0.5s ease-in-out;
+}
 
-/*.hidden-filter {*/
-/*    height: 0 !important;*/
-/*    visibility: hidden !important;*/
-/*}*/
+#filter-options-container > * {
+    transition: transform 0.5s ease;
+    transform: translateY(0);
+}
 
-/*.transition-5 {*/
-/*    transition: all 0.5s ease-in-out !important;*/
-/*}*/
+#filter-options-container > * {
+    transform: translateY(0); /* Reset transformation */
+}
+
+
+.hidden-filter {
+    max-height: 1000px !important;
+}
+
+.bg-selma {
+    background-color: #f0f4f9 !important;
+}
+
+.center-x {
+    left: auto;
+    right: auto;
+}
+
+#pie_chart {
+    margin-left: 15px !important;
+}
+
+.transition-5 {
+    transition: width 0.5s ease-in-out !important;
+}
+
+
+#chart_div {
+    width: 306px;
+}
+
+#revenue-right {
+   width: 143px;
+}
+
+.mini-chart{
+    width: 210px !important;
+}
+
+.mega-chart {
+    width: 259px !important;
+}
