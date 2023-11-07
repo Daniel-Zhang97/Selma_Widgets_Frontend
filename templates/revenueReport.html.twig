@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+{% block script %}
+    <script>
+        let filterOptions = {{ filterOptions | json_encode | raw }};
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            filterOptions['generateReport'] = true
+            const filterOptionsJSON = JSON.stringify(filterOptions)
+            console.log(filterOptionsJSON)
+
+            fetch('http://localhost:8001/request', {
+                method: 'POST',
+                body: filterOptionsJSON,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => {
+                    return response.json()
+                })
+                .then(data => {
+                    console.log(data)
+                })
+                .catch(error => {
+                })
+                .then(() => {
+                });
+        });
+    </script>
+{% endblock %}
+
+
+{% block body %}
+{#    Revenue report main container#}
+    <div>
+        <h1>Revenue Report</h1>
+        <p>Filter Options:</p>
+        <ul>
+            <li>Group By: {{ filterOptions.groupBy }}</li>
+            <li>Collected: {{ filterOptions.Collected ? 'Yes' : 'No' }}</li>
+            <li>Uncollected: {{ filterOptions.Uncollected ? 'Yes' : 'No' }}</li>
+            <li>Overdue: {{ filterOptions.Overdue ? 'Yes' : 'No' }}</li>
+            <li>Start Date: {{ filterOptions.startDate }}</li>
+            <li>End Date: {{ filterOptions.endDate }}</li>
+        </ul>
+    </div>
+
+
+{% endblock %}
+

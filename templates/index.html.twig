@@ -3,9 +3,7 @@
 {% block script %}
 
 {#    google charts#}
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
-        google.charts.load('current', {packages: ['corechart']});
         let barGraphData = [['Fees Collected', 'Collected', 'Outstanding', 'Overdue',]];
         let chart = null;
         let pieChart = null;
@@ -35,13 +33,13 @@
                 },
                 orientation: 'horizontal',
                 backgroundColor: '#f9f6fa',
-                chartArea: {top: '1px', left: '10px', height:'60%', width:'70%'}
+                chartArea: {left: 40, height:'60%', width:'80%'}
+
             }
             chart.draw(data, options);
         }
 
         function getData(initial = false) {
-
             const filterOptionsJSON = JSON.stringify(filterOptions);
 
             fetch('http://localhost:8001/request', {
@@ -55,7 +53,7 @@
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
-                    barGraphData = [['Fees Collected', 'Collected', 'Outstanding', 'Overdue',]]
+                    barGraphData = [['Fees Collected', 'Collected', 'Outstanding', 'Overdue', 'Overpaid']]
                     return response.json();
                 })
                 .then(data => {
@@ -65,7 +63,8 @@
                                 year,
                                 data[year]['Collected'],
                                 data[year]['Uncollected'],
-                                data[year]['Overdue']
+                                data[year]['Overdue'],
+                                data[year]['Overpaid']
                             ]
                         );
                     }
@@ -83,10 +82,11 @@
         }
 
         function areOptionsValid(initial = false) {
-            if (!filterOptions['Collected'] && !filterOptions['Uncollected'] && !filterOptions['Overdue']) {
+            if (!filterOptions['Collected'] && !filterOptions['Uncollected'] && !filterOptions['Overdue'] &&
+                !filterOptions['Overpaid']) {
                 console.log('invalid type options')
-                return;
             } else {
+                console.log(filterOptions)
                 getData(true)
             }
         }
@@ -101,19 +101,20 @@
                 pieHole: 0.47,
                 pieSliceText: 'none',
                 title: inputData[0][0],
-                tooltip: {isHtml: true},
-                width: 120,
-                height: 160,
-                legend: {position: 'bottom', alignment: 'center'},
+                tooltip: { isHtml: true, trigger: 'selection' },
+                width: 140,
+                height: 140,
+                legend: { position: 'bottom', alignment: 'center' },
                 backgroundColor: '#f9f6fa',
                 slices: {
-                    0: {color: '#37a2eb'},
-                    1: {color: '#ff9f40'},
-                    2: {color: '#ff6384'},
+                    0: { color: '#37a2eb' },
+                    1: { color: '#ff9f40' },
+                    2: { color: '#ff6384' },
                 },
-                chartArea: {top: '10px', height:'60%', width:'100%'}
-            }
+                chartArea: {left: 5, height: '60%', width: '100%' }
+            };
 
+            console.log('should work')
             pieChart.draw(data,options)
 
         }
@@ -136,16 +137,19 @@
             google.charts.setOnLoadCallback(async function () {
                 pieChart = new google.visualization.PieChart(document.getElementById('pie_chart'));
                 chart = new google.visualization.BarChart(document.getElementById('chart_div'));
-                google.visualization.events.addListener(chart, 'onmouseover', function(e) {
-                    updatePieChart(e.row + 1)
+                google.visualization.events.addListener(chart, 'select', function(e) {
+                    selectedRows = chart.getSelection('row');
+                    if (selectedRows && selectedRows.length > 0) {
+                        updatePieChart(selectedRows[0].row + 1)
+                    }
                 });
-
                 areOptionsValid(true)
-
             });
         });
 
     </script>
+
+
     <script>
 {#        initializing the dates#}
         var currentDate = new Date();
@@ -161,8 +165,10 @@
             Collected: true,
             Uncollected: true,
             Overdue: true,
+            Overpaid: true,
             startDate: oneYearAgoFormatted,
             endDate: oneYearLaterFormatted,
+            generateReport: false,
         };
 
         {#    datepicker filter#}
@@ -209,15 +215,11 @@
 
         // Filter hide/show handler
         $(function () {
-            $('.filter-expand-button, #submit-button').on('click', function () {
-
-                // $('#chart_div').toggleClass('mini-chart');
-                // $('#revenue-right').toggleClass('mega-chart');
-
+            $('.filter-expand-button').on('click', function () {
                 if (barWidth == 300) {
-                    barWidth = 169
+                    barWidth = 188
                     $('#chart_div').toggleClass('mini-chart');
-                    $('#revenue-right').toggleClass('mega-chart')
+                    $('#revenue-right, #pie_chart, #pie-report-container').toggleClass('mega-chart')
                     drawChart(barGraphData)
                     setTimeout(function() {
                         $('#filter-options-container').toggleClass('hidden-filter');
@@ -226,7 +228,7 @@
                     $('#filter-options-container').toggleClass('hidden-filter');
                     setTimeout(function() {
                         barWidth = 300
-                        $('#revenue-right').toggleClass('mega-chart')
+                        $('#revenue-right, #pie_chart, #pie-report-container').toggleClass('mega-chart')
                         $('#chart_div').toggleClass('mini-chart');
                         drawChart(barGraphData)
                     }, 500)
@@ -236,8 +238,34 @@
             });
         });
 
-    </script>
+        // Generate Revenue Report handler
+        $(function() {
+            $('#generate-report').on('click', function() {
+                const filterOptionsJSON = JSON.stringify(filterOptions);
 
+                // Send a POST request to the Symfony controller to generate the report
+                fetch('http://localhost:8002/revenue_report', {
+                    method: 'POST',
+                    body: filterOptionsJSON,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data.url)
+                        const newTab = window.open(data.url, '_blank');
+                        if (newTab) {
+                            newTab.focus();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            });
+        });
+
+    </script>
 
 {% endblock %}
 
@@ -251,7 +279,7 @@
             <h4 class="pt-2 mt-0 mb-2 ml-3 ">Revenue Breakdown</h4>
         </div>
     {#        card items#}
-        <div class="w-100 d-flex flex-row container align-content-center p-0">
+        <div id="revenue-widget-card" class="w-100 d-flex flex-row align-content-center p-0">
         {#            google chart drawn (left side of the card) #}
             <div id="chart_div" class="chart-container-default transition-5 z-2">
             </div>
@@ -266,15 +294,22 @@
                         </span>
                     </div>
                 </a>
-            {#               Pie chart & filter options & data section#}
-                <div class="h-100 ml-auto">
-                {# Pie chart section                    #}
-                    <div class="position-absolute center-x">
-                        <div id="pie_chart"></div>
+            {#               Pie chart, generate report & filter options & data section#}
+                <div class="h-100 ml-auto w-100">
+                {# Pie chart section     && Generate report               #}
+                    <div id="pie-report-container" class="d-flex flex-column position-absolute transition-5">
+                        {#                        Pie chart#}
+                        <div id="pie_chart" class="mx-auto flex-grow-1"></div>
+                        {#                    Generate report#}
+                        <a id="generate-report" class="generic-button ml-auto mt-auto pr-2
+                         bg-selma w-100 d-flex flex-row justify-content-end flex-grow-1 border-top-separator">
+                            <div class="my-auto">Generate Report</div>
+                            <i class="fa-regular fa-file-lines my-auto pl-1"></i>
+                        </a>
                     </div>
                 {# filter options                #}
                     <div id="filter-options-container" class="position-relative ml-auto">
-                        <div id="" class="bg-selma d-flex flex-column h-100 p-3">
+                        <div id="" class="bg-selma d-flex flex-column p-3 h-100">
                     {#                    date range container#}
                             <div class="h-33">
                                 <div>
@@ -290,8 +325,9 @@
                                 <span class="h-25">
                                     Type:
                                 </span>
-                                <div class="form-check form-switch d-flex flex-row h-75 w-100">
-                                    <div class="d-flex flex-column h-100 w-33">
+                                <div class="form-check form-switch d-flex flex-row h-75 w-100 justify-content-between
+                                 p-0">
+                                    <div class="d-flex flex-column h-100 w-25">
                                         <label for="includeCollectedRevenue" class="my-1">Collected</label>
                                         <div>
                                             <input value="Collected" class="form-check-input toggle-switch-base m-0"
@@ -300,7 +336,7 @@
                                                    checked>
                                         </div>
                                     </div>
-                                    <div class="d-flex flex-column h-100 w-33">
+                                    <div class="d-flex flex-column h-100 w-25">
                                         <label for="" class="my-1">Uncollected</label>
                                         <div>
                                             <input value="Uncollected" class="form-check-input toggle-switch-base m-0 "
@@ -309,8 +345,17 @@
                                                    checked>
                                         </div>
                                     </div>
-                                    <div class="d-flex flex-column h-100 w-33">
+                                    <div class="d-flex flex-column h-100 w-25">
                                         <label for="" class="my-1">Overdue</label>
+                                        <div>
+                                            <input value="Overdue" class="form-check-input toggle-switch-base m-0"
+                                                   type="checkbox"
+                                                   role="switch"
+                                                   checked>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column h-100 w-25">
+                                        <label for="" class="my-1">Overpaid</label>
                                         <div>
                                             <input value="Overdue" class="form-check-input toggle-switch-base m-0"
                                                    type="checkbox"
@@ -338,6 +383,8 @@
                             </div>
                         </div>
                     </div>
+
+
                 </div>
             </div>
         </div>
