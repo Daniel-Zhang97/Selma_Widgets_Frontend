@@ -5,10 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ffc31b31-3998-478b-b207-7f155a3cecd6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/public/js/home.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/public/js/revenueReport.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html.twig" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html.twig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/js/home.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/js/home.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/public/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/revenueReport.html.twig" beforeDir="false" afterPath="$PROJECT_DIR$/templates/revenueReport.html.twig" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -123,7 +124,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1697597545785</updated>
-      <workItem from="1698194900893" duration="133588000" />
+      <workItem from="1698194900893" duration="143989000" />
     </task>
     <servers />
   </component>

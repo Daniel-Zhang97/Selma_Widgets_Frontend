@@ -209,3 +209,13 @@ div.google-visualization-tooltip span {
 label {
     font-size: 0.9rem !important;
 }
+
+#revenue-report-title {
+    font-size: 4rem;
+}
+
+.revenue_report_line_item{
+    border: 2px solid black;
+    padding: 2px;
+
+}

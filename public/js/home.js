@@ -70,10 +70,10 @@
     document.getElementById('responseContainer').textContent = 'Error: ' + error.message;
 })
     .then(() => {
-    drawChart(barGraphData);
-    if (initial == true) {
-    updatePieChart(barGraphData.length - 1)
-}
+        drawChart(barGraphData);
+        if (initial == true) {
+        updatePieChart(barGraphData.length - 1)
+    }
 });
 }
 
