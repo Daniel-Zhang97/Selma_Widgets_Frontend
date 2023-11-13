@@ -1,4 +1,9 @@
 {% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="revenueReport.css">
+{% endblock %}
+
 {% block script %}
     <script>let filterOptions = {{ filterOptions | json_encode | raw }}</script>
     <script src="{{ asset('js/revenueReport.js') }}">
@@ -8,8 +13,10 @@
 
 {% block body %}
     {# Revenue report main container #}
-    <div>
-        <h1>Revenue Report</h1>
+    <div id="revenue-report">
+        <h1 class="revenue-title">Revenue Report</h1>
+
+
         <p>Filter Options:</p>
         <ul>
             <li>Group By: {{ filterOptions.groupBy }}</li>
@@ -23,4 +30,5 @@
 
             <div id="revenueReportContainer">
             </div>
+    </div>
 {% endblock %}
