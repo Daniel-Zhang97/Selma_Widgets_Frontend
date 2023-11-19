@@ -6,34 +6,34 @@
 
     // Bar chart functions
     function drawChart(inputData) {
-    var data = google.visualization.arrayToDataTable(
-    inputData
-    );
+        var data = google.visualization.arrayToDataTable(
+        inputData
+        );
 
-    let options = {
-    animation: {"startup": true,
-    duration: 500,
-    easing: 'inAndOut'},
-    tooltip: {isHtml: true},
-    width: barWidth,
-    height: 200,
-    legend: {position: 'none'},
-    bar: {groupWidth: '75%'},
-    isStacked: true,
-    vAxis: {gridlines: {count: 4}, format: 'currency' },
-    series: {
-    0: {color: '#37a2eb'},
-    1: {color: '#ff9f40'},
-    2: {color: '#ff6384'},
-    3: {color: '#ffcd57'},
-},
-    orientation: 'horizontal',
-    backgroundColor: '#f9f6fa',
-    chartArea: {left: 40, height:'60%', width:'80%'}
+        let options = {
+            animation: {"startup": true,
+            duration: 500,
+            easing: 'inAndOut'},
+            tooltip: {isHtml: true},
+            width: barWidth,
+            height: 200,
+            legend: {position: 'none'},
+            bar: {groupWidth: '75%'},
+            isStacked: true,
+            vAxis: {gridlines: {count: 4}, format: 'currency' },
+            series: {
+                0: {color: '#37a2eb'},
+                1: {color: '#ff9f40'},
+                2: {color: '#ff6384'},
+                3: {color: '#ffcd57'},
+            },
+            orientation: 'horizontal',
+            backgroundColor: '#f9f6fa',
+            chartArea: {left: 40, height:'60%', width:'80%'}
 
-}
-    chart.draw(data, options);
-}
+        }
+        chart.draw(data, options);
+    }
 
     function getData(initial = false) {
     const filterOptionsJSON = JSON.stringify(filterOptions);

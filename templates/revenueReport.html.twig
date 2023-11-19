@@ -16,19 +16,13 @@
     <div id="revenue-report">
         <h1 class="revenue-title">Revenue Report</h1>
 
+        <div id="bar-chart-div" class="chart-outline w-90 mx-auto my-4">
+            <div id="report-bar-chart"></div>
+        </div>
 
-        <p>Filter Options:</p>
-        <ul>
-            <li>Group By: {{ filterOptions.groupBy }}</li>
-            <li>Collected: {{ filterOptions.Collected ? 'Yes' : 'No' }}</li>
-            <li>Uncollected: {{ filterOptions.Uncollected ? 'Yes' : 'No' }}</li>
-            <li>Overdue: {{ filterOptions.Overdue ? 'Yes' : 'No' }}</li>
-            <li>Start Date: {{ filterOptions.startDate }}</li>
-            <li>End Date: {{ filterOptions.endDate }}</li>
-        </ul>
+        <div id="trends-div" class="w-90 d-flex flex-row justify-content-between mx-auto flex-wrap mb-4"></div>
 
-
-            <div id="revenueReportContainer">
-            </div>
+        <div id="main-bar-chart-div"></div>
+        <div id="revenueReportContainer"></div>
     </div>
 {% endblock %}
