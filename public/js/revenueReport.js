@@ -25,26 +25,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 let studentData = data[studentId];
 
                 htmlContent += `<div class="generic-row student-row">   
-        <div> # ${studentData.id} </div> 
-        <div> ${studentData.firstname} ${studentData.surname} </div>
-        <div class="w-10">show/hide <i class="fa-solid fa-angles-down"></i></div>
-    </div>
-    <div class="show">`;
+                                    <div> # ${studentData.id} </div> 
+                                    <div> ${studentData.firstname} ${studentData.surname} </div>
+                                    <div class="w-10 revenue-report-show-hide-button">show/hide <i class="fa-solid fa-angles-down"></i></div>
+                                </div>
+                                <div class="show">`;
 
                 for (let enrolmentNumber in studentData.enrolments) {
                     let enrolmentData = studentData.enrolments[enrolmentNumber];
 
                     htmlContent += `<div>
-            <div class="generic-bar" >
-                <div>Enrolment Number - </div> 
-                <div>Enrolment Time - </div>
-                <div class="w-10"></div>
-            </div>
-            <div class="generic-row"> 
-                <div># ${enrolmentNumber}</div> 
-                <div>${enrolmentData.enrolment_date}</div>
-                <div class="w-10">show/hide <i class="fa-solid fa-angles-down"></i></div>
-            </div>`;
+                        <div class="generic-bar" >
+                            <div>Enrolment Number - </div> 
+                            <div>Enrolment Time - </div>
+                            <div class="w-10"></div>
+                        </div>
+                        <div class="generic-row"> 
+                            <div># ${enrolmentNumber}</div> 
+                            <div>${enrolmentData.enrolment_date}</div>
+                            <div class="w-10 revenue-report-show-hide-button">show/hide <i class="fa-solid fa-angles-down"></i></div>
+                        </div>`;
 
                     if (enrolmentData.invoice_headers) {
                         for (let headerNumber in enrolmentData.invoice_headers) {
@@ -60,14 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="generic-row-2">
                         <div># ${headerNumber}</div>
                         <div> $${headerData.amount}</div>`;
-
                             if (headerData.balance < 0) {
                                 htmlContent += `<div>-$${Math.abs(headerData.balance)} (Overpaid)</div>`;
                             } else {
                                 htmlContent += `<div>$${headerData.balance}</div>`;
                             }
 
-                            htmlContent += `<div class="w-10"> show/hide <i class="fa-solid fa-angles-down"></i></div>
+                            htmlContent += `<div class="w-10 revenue-report-show-hide-button"> show/hide <i class="fa-solid fa-angles-down"></i></div>
                     </div>
                     <div class="show">
                         <div class="generic-bar-2"> 
@@ -186,7 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 htmlContent += '<div id="overpaidLineChart" class="chart-outline w-47 my-2"></div>'
             }
 
-            htmlContent += '<div id="averagePieChart" class="chart-outline w-47 my-2"></div>'
+            htmlContent += '<div id="averagePieChart" class="chart-outline w-47 my-2 d-flex justify-content-center' +
+                ' "></div>'
 
 
             console.log(barGraphData)
@@ -210,6 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if ( filterOptions['Overpaid']) {
                     setLineChartDiv(barGraphData, 'overpaidLineChart', 'Overpaid', 4)
                 }
+
+                drawPieChart(barGraphData, 'averagePieChart')
             })
         })
 })
@@ -233,7 +235,7 @@ function drawBarChart(inputData) {
         legend: {position: 'none'},
         bar: {groupWidth: '75%'},
         isStacked: true,
-        vAxis: {gridlines: {count: 4}, format: 'currency' },
+        vAxis: {gridlines: {count: 10}, format: 'currency' },
         series: {
             0: {color: '#37a2eb'},
             1: {color: '#ff9f40'},
@@ -249,19 +251,37 @@ function drawBarChart(inputData) {
 }
 
 // Pie chart drawer
-function drawPieChart(inputData, targetDiv){
-    var data = google.visualization.arrayToDataTable(
-        inputData
-    );
+function drawPieChart(inputData, targetDiv) {
+    let target = new google.visualization.PieChart(document.getElementById(targetDiv));
+    const columnSums = Array.from({ length: inputData[0].length - 1 }, () => 0);
 
-    let pieChartDiv = document.getElementById('trends-div')
+    let types = inputData[0]
+    types.shift();
+
+    inputData.slice(1).forEach((subarray) => {
+        for (let i = 1; i < subarray.length; i++) {
+            columnSums[i - 1] += subarray[i];
+        }
+    });
+
+    let ratioData = columnSums.reduce((acc, val) => acc + Math.abs(val), 0);
+
+    for (let i in columnSums) {
+        columnSums[i] = ([types[i], Math.abs(columnSums[i]) / ratioData]);
+    }
+
+    columnSums.unshift(['Status', 'Overall Percentage'])
+
+    let data = google.visualization.arrayToDataTable(columnSums);
+
+    let pieChartDiv = document.getElementById('averagePieChart');
 
     let options = {
         pieHole: 0.47,
         pieSliceText: 'none',
-        title: inputData[0][0],
+        title: 'Relative % of total period selected',
         tooltip: { isHtml: true, trigger: 'selection' },
-        width: pieChartDiv.offsetWidth * 0.395,
+        width: pieChartDiv.offsetWidth * 0.9,
         height: 200,
         legend: { position: 'bottom', alignment: 'center' },
         backgroundColor: '#fafdff',
@@ -269,19 +289,18 @@ function drawPieChart(inputData, targetDiv){
             0: { color: '#37a2eb' },
             1: { color: '#ff9f40' },
             2: { color: '#ff6384' },
-            3: {color: '#ffcd57'},
+            3: { color: '#ffcd57' },
         },
-        chartArea: {left: 5, height: '60%', width: '100%' }
+        chartArea: { height: '60%', width: '100%' },
     };
 
-    console.log('should work')
-    targetDiv.draw(data,options)
-
+    target.draw(data, options);
 }
 
 
+
 //Line Chart Drawer
-function drawLineChart(inputData, targetDiv, color = null) {
+function drawLineChart(inputData, targetDiv, type, color = null) {
     var data = google.visualization.arrayToDataTable(
         inputData
     );
@@ -293,9 +312,10 @@ function drawLineChart(inputData, targetDiv, color = null) {
             easing: 'inAndOut'},
         tooltip: {isHtml: true},
         width: lineChartDiv.offsetWidth * 0.95,
+        title: ('% change in ' + type + " from previous period"),
         height: 200,
         legend: {position: 'none'},
-        vAxis: {gridlines: {count: 4}, format: 'percent' },
+        vAxis: {gridlines: {count: 6}, format: 'percent', minValue: -1},
         series: {
             0: {color: '#37a2eb'},
             1: {color: '#ff9f40'},
@@ -304,7 +324,7 @@ function drawLineChart(inputData, targetDiv, color = null) {
         },
         orientation: 'horizontal',
         backgroundColor: '#fafdff',
-        chartArea: { left: 50, bottom: 50, height:'60%', width:'90%'}
+        chartArea: { left: 50, bottom: 50, height:'60%', width:'90%'},
 
     }
 
@@ -351,7 +371,7 @@ function calculateLineData (data, type) {
         let currentValue = line[index];
 
         if(previousValue !== null) {
-            newData.push([line[0], currentValue/previousValue ])
+            newData.push([line[0], (currentValue - previousValue)/previousValue])
         } else {
             newData.push([line[0], line[index]])
         }
@@ -364,5 +384,5 @@ function calculateLineData (data, type) {
 
 function setLineChartDiv (data, targetDiv, type, color) {
     let target = new google.visualization.LineChart(document.getElementById(targetDiv));
-    drawLineChart(calculateLineData(data, type), target, color)
+    drawLineChart(calculateLineData(data, type), target, type, color)
 }

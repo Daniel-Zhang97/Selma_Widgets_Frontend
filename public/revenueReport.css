@@ -12,7 +12,7 @@ body {
 }
 
 .revenue-title {
-    background-color: #f0f4f9 !important;
+    background-color: #d3eeff !important;
     font-size: 3rem;
     text-align: center;
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);;
@@ -166,4 +166,24 @@ body {
 .chart-outline {
     border: 1px solid rgba(0, 0, 0, 0.175);
     background-color: #fafdff;
+}
+
+.google-visualization-tooltip {
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.7 )!important;
+    border: none !important;
+    border-radius: 1rem !important;
+    padding: 0px !important; /* Add padding to the tooltip content */
+    width: auto !important; /* Adjust the width as needed */
+    transition: all 0.5s ease-in-out !important;
+}
+
+div.google-visualization-tooltip > ul > li > span {
+    color: #ffffff !important;
+}
+
+.revenue-report-show-hide-button:hover {
+    cursor: pointer;
+    background-color: #9edcff;
+    color: white;
 }
